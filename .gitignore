@@ -102,7 +102,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -138,3 +137,22 @@ dmypy.json
 .idea/modules.xml
 .idea/vagrant.xml
 .idea/vcs.xml
+
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+**/bin/
+**/obj/
+**/global.json
+**/Dockerfile*
+**/.dockerignore*
+**/*.user
+*.config
+**/DesignTimeBuild
+**/FileContentIndex
+*.suo
+**/v17
+**/ProjectEvaluation
+**/*.png
+**/*.txt

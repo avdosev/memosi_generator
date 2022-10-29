@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemesApi", "MemesApi\MemesApi.csproj", "{A55E70FE-5199-43E0-88C4-653D3738E4DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A55E70FE-5199-43E0-88C4-653D3738E4DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A55E70FE-5199-43E0-88C4-653D3738E4DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A55E70FE-5199-43E0-88C4-653D3738E4DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A55E70FE-5199-43E0-88C4-653D3738E4DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2C64015A-566B-4673-AF2A-75E7D734BE80}
+	EndGlobalSection
+EndGlobal

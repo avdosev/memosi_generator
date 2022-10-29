@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  memes-api:
+
+    env_file:
+      - .env
+
+    build:
+      context: image_service/MemesApi/MemesApi/
+      dockerfile: Dockerfile
+    
+    ports:
+      - 9999:9999
+    volumes:
+      - ${STATIC_FILES_PATH}:/app/static
+
+    restart: always
+
+  bot:
+    env_file:
+      - .env
+    
+    build:
+      context: tg_bot/
+      dockerfile: Dockerfile
+
+    
