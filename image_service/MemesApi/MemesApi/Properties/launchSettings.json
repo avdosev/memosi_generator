@@ -10,7 +10,11 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "API_URL": "http://127.0.0.1:9999",
-        "CONNECTION_STRING": "Data Source=Memes.db;"
+        "CONNECTION_STRING": "Data Source=Memes.db;",
+        "MINIO_URL": "127.0.0.1:9000",
+        "MINIO_BUCKET": "memes",
+        "MINIO_ACCESS_KEY": "TSf3cfIysZ2y2trh",
+        "MINIO_SECRET_KEY": "aU5hv99vEzqf20v2MlLZeLb6OiiwqAPc"
       }
     }
   }

@@ -13,12 +13,12 @@ services:
       - ${STATIC_FILES_PATH}:/app/static
     restart: always
 
-  # bot:
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: tg_bot/
-  #     dockerfile: Dockerfile
+  bot:
+    env_file:
+      - .env
+    build:
+      context: tg_bot/
+      dockerfile: Dockerfile
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor
@@ -66,7 +66,7 @@ services:
     image: prom/prometheus:latest
     restart: always
     ports:
-      - 9090:9090
+      - 9091:9090
     volumes:
       - ./monitoring/prometheus/:/etc/prometheus/
 
@@ -75,12 +75,25 @@ services:
     image: "portainer/portainer"
     restart: always
     ports:
-      - 9000:9000
+      - 9001:9000
       - 8000:8000
     command: -H unix:///var/run/docker.sock
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_volume:/data
 
+  minio:
+    container_name: minio
+    image: quay.io/minio/minio 
+    ports:
+      - 9000:9000
+      - 9090:9090
+    volumes:
+      - minio_volume:/data
+    env_file:
+      - .env
+    entrypoint: "minio server /data --console-address :9090"
+
 volumes:
   portainer_volume:
+  minio_volume:

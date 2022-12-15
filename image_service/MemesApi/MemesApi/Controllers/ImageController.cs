@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
+using MemesApi.Minio;
 
 namespace MemesApi.Controllers
 {
@@ -13,8 +14,8 @@ namespace MemesApi.Controllers
     public class ImagesController : ControllerBase
     {
         private readonly MemeContext _context;
-        private readonly IOptions<AppSettings> _config;
-        public ImagesController(MemeContext context, IOptions<AppSettings> config)
+        private readonly IOptions<MinioConfiguration> _config;
+        public ImagesController(MemeContext context, IOptions<MinioConfiguration> config)
         {
             _context = context;
             _config = config;
@@ -23,7 +24,8 @@ namespace MemesApi.Controllers
         [HttpPost("estimate/{imageId:int}")]
         public async Task<ActionResult> Estimate(int imageId, EstimateRequest request)
         {
-            var image = await _context.Files.FirstOrDefaultAsync(f => f.Id == imageId);
+            var image = await _context.Files.FirstOrDefaultAsync(f => f.Id == imageId)
+                .ConfigureAwait(false);
             if(image is null) return NotFound();
 
             var imageFile = image.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0];
@@ -31,16 +33,16 @@ namespace MemesApi.Controllers
 
             await System.IO.File.AppendAllTextAsync(
                 Path.Combine(Environment.CurrentDirectory, "static", scoreFileName),
-                $"{request.Estimate} ");
+                $"{request.Estimate} ").ConfigureAwait(false);
 
             await _context.Estimates.AddAsync(new Estimate
             {
                 FileId = imageId,
                 ClientId = request.ClientId,
                 Score = request.Estimate
-            });
+            }).ConfigureAwait(false);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync().ConfigureAwait(false);
             return Ok();
         }
 
@@ -53,19 +55,22 @@ namespace MemesApi.Controllers
             {
                 var result = await _context.Files
                     .OrderBy(i => i.Id)
-                    .FirstOrDefaultAsync(i => i.Id > previousId);
+                    .FirstOrDefaultAsync(i => i.Id > previousId).ConfigureAwait(false);
 
                 return new ImageResponse(result?.Id, GetFullUrl(result?.FileName), result == null);
             }
 
             var lastEstimate = await _context.Estimates
                 .OrderByDescending(e => e.FileId)
-                .FirstOrDefaultAsync(e => e.ClientId == clientId);
+                .FirstOrDefaultAsync(e => e.ClientId == clientId).ConfigureAwait(false);
 
             var nextFile = lastEstimate switch
             {
-                null => await _context.Files.OrderBy(f => f.Id).FirstOrDefaultAsync(),
-                _ => await _context.Files.OrderBy(f => f.Id).FirstOrDefaultAsync(f => f.Id > lastEstimate.FileId)
+                null => await _context.Files.OrderBy(f => f.Id).FirstOrDefaultAsync().ConfigureAwait(false),
+                _ => await _context.Files
+                    .OrderBy(f => f.Id)
+                    .FirstOrDefaultAsync(f => f.Id > lastEstimate.FileId)
+                    .ConfigureAwait(false)
             };
 
             return new ImageResponse(nextFile?.Id, GetFullUrl(nextFile?.FileName), nextFile == null);
@@ -73,7 +78,7 @@ namespace MemesApi.Controllers
 
         private string GetFullUrl(string? fileName)
         {
-            return $"{_config.Value.UrlPrefix ?? ""}/{fileName}";
+            return $"http://{_config.Value.Endpoint}/{_config.Value.BucketName}/{fileName}";
         }
     }
 }

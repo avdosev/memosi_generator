@@ -19,8 +19,9 @@ namespace MemesApi.Starter
             var memeContext = score.ServiceProvider.GetService<MemeContext>();
 
             if (memeContext is null) throw new ApplicationException("Can't get MemeContext service");
-            
-            await memeContext.Database.MigrateAsync();
+
+            await memeContext.Database.MigrateAsync()
+                .ConfigureAwait(false);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
