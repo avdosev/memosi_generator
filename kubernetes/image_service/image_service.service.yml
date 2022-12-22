@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: image-api-service
+
+spec:
+  selector:
+    app: image-service
+  ports:
+    - protocol: TCP
+      port: 9999
+      targetPort: 9999

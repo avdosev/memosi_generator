@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tg-bot-deployment
+  namespace: default
+  labels:
+    app: tg-bot
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: tg-bot
+
+  template:
+    metadata:
+      labels:
+        app: tg-bot
+    
+    spec:
+      containers:
+        - name: tg-bot
+          image: asmetliness/meme_generator:tg_bot
+
+          envFrom:
+            - configMapRef:
+                name: config-env

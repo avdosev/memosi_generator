@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-env
+  namespace: default
+data:
+    STATIC_FILES_PATH: ./static
+    
+    API_URL: http://image-api-service:9999
+
+    CONNECTION_STRING: Data Source=Memes.db;
+
+    MODEL_PATH: ./meme_generator/model

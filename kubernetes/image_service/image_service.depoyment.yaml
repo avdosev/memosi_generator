@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-service-deployment
+  namespace: default
+  labels:
+    app: image-service
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: image-service
+
+  template:
+    metadata:
+      labels:
+        app: image-service
+    
+    spec:
+      containers:
+        - name: image-service-api
+          image: asmetliness/meme_generator:image_service
+          ports:
+            - containerPort: 9999
+          
+          envFrom:
+            - configMapRef:
+                name: config-env
+
+          volumeMounts:
+            - name: image-service-static-volume
+              mountPath: /app/static
+      
+      volumes:
+        - name: image-service-static-volume
+          persistentVolumeClaim:
+            claimName: static-volume-claim
