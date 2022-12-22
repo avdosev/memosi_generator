@@ -1,5 +1,6 @@
 using MemesApi.Controllers.Filters;
 using MemesApi.Db;
+using MemesApi.Services;
 using MemesApi.Minio;
 using MemesApi.Starter;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,9 @@ using Serilog.Events;
 
 namespace MemesApi
 {
-    public class Program
+    public partial class Program
     {
-        public static void Main(string[] args)
+         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -73,12 +74,34 @@ namespace MemesApi
                 conf.SecretKey = builder.Configuration.GetValue<string>("MINIO_SECRET_KEY");
                 conf.BucketName = builder.Configuration.GetValue<string>("MINIO_BUCKET");
             });
+
+            builder.Services.Configure<AppSettings>(config =>
+            {
+                config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl) + "/static";
+                config.MaxImageSize = 10 * 1024 * 1024; // 10 МБ
+                config.ModelServiceUrl = builder.Configuration.GetValue<string>(ConfigurationConsts.ModelUrl);
+            });
+
+            var modelUrl = builder.Configuration.GetValue<string>(ConfigurationConsts.ModelUrl);
+            if (modelUrl is null)
+            {
+                builder.Services.AddTransient<IModelService, MockModelService>();
+            }
+            else
+            {
+                builder.Services.AddHttpClient(ModelServiceConsts.ClientName, conf =>
+                {
+                    conf.BaseAddress = new Uri(modelUrl);
+                });
+                builder.Services.AddTransient<IModelService, MlModelService>();
+            }
         }
 
         private static WebApplication ConfigureApp(WebApplicationBuilder builder)
         {
             var app = builder.Build();
             
+
             app.UseSwagger();
             app.UseSwaggerUI();
             app.UseRouting();
@@ -87,5 +110,6 @@ namespace MemesApi
             app.MapMetrics();
             return app;
         }
+        
     }
 }

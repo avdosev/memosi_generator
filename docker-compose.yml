@@ -1,6 +1,34 @@
 version: "3"
 
 services:
+
+
+  meme-generator:
+    env_file:
+      - .env
+    
+    build:
+      context: meme_generator/
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    
+    restart: always
+    
+    volumes:
+      - ${MODEL_PATH}:/model
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+
+    entrypoint: uvicorn inference:app --host 0.0.0.0 --port 8000
+
+
+
   memes-api:
     env_file:
       - .env

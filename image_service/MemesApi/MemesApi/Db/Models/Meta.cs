@@ -4,8 +4,7 @@ namespace MemesApi.Db.Models
     {
         public int Id { get; set; }
         public string? Format { get; set; }
-        public DateTime CreationDate { get; }
+        public DateTime CreationDate { get; set; }
         public DateTime? UpdateDate { get; set; }
-        public int TotalEstimates { get; set; }
     }
 }

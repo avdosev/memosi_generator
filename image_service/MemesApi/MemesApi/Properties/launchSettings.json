@@ -14,7 +14,8 @@
         "MINIO_URL": "127.0.0.1:9000",
         "MINIO_BUCKET": "memes",
         "MINIO_ACCESS_KEY": "TSf3cfIysZ2y2trh",
-        "MINIO_SECRET_KEY": "aU5hv99vEzqf20v2MlLZeLb6OiiwqAPc"
+        "MINIO_SECRET_KEY": "aU5hv99vEzqf20v2MlLZeLb6OiiwqAPc",
+        "MODEL_CONNECTION_STRING": "http://127.0.0.1:8000"
       }
     }
   }
