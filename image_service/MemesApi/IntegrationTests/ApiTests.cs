@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Minio;
 using NUnit.Framework;
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
@@ -31,9 +32,13 @@ public class ApiTests: TestBase
 	private static readonly Dictionary<string, string> TestConfiguration = new()
 	{
 		{"API_URL", "http://127.0.0.1:9999"},
-		{"CONNECTION_STRING", "Data Source=Tests.db;"}
+		{"CONNECTION_STRING", "Data Source=Tests.db;"},
+		{"MINIO_URL", "127.0.0.1:9000" },
+		{"MINIO_BUCKET", "memes" },
+		{"MINIO_ROOT_USER", "TSf3cfIysZ2y2trh" },
+		{"MINIO_ROOT_PASSWORD", "aU5hv99vEzqf20v2MlLZeLb6OiiwqAPc" }
 	};
-	
+
 	private readonly Random _random = new();
 	
 
@@ -71,7 +76,11 @@ public class ApiTests: TestBase
 	[Test]
 	public async Task GetNextImage_Flow_Test()
 	{
-		var userId = Guid.NewGuid().ToString();
+
+
+
+
+        var userId = Guid.NewGuid().ToString();
 		var previousId = 0;
 		while (true)
 		{
@@ -96,8 +105,15 @@ public class ApiTests: TestBase
 		
 			Assert.NotNull(dbImage);
 			Assert.True(nextImage.Url!.Contains(dbImage!.FileName));
-			
-			Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", dbImage.FileName)));
+
+
+			Assert.DoesNotThrowAsync(async () =>
+			{
+				var stat = await MinioClient.StatObjectAsync(new StatObjectArgs()
+					.WithBucket(MinioConfiguration.BucketName)
+					.WithObject(dbImage.FileName));
+
+			});
 			
 			previousId = nextImage.ImageId!.Value;
 		}
@@ -137,10 +153,6 @@ public class ApiTests: TestBase
 		Assert.AreEqual(estimateValue, estimate!.Score);
 		Assert.AreEqual(nextImage.ImageId, estimate.FileId);
 		
-		var imageFile = estimate.File.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0];
-		var scoreFileName = string.Join(".", imageFile, "txt");
-		
-		Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", scoreFileName)));
 	}
 	
 	[Test]
@@ -192,11 +204,15 @@ public class ApiTests: TestBase
 		
 			Assert.NotNull(dbImage);
 			Assert.True(nextImage.Url!.Contains(dbImage!.FileName));
-			
-			Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", dbImage.FileName)));
 
-			
-			var beforeCount = await Db.Estimates.CountAsync();
+            Assert.DoesNotThrowAsync(async () =>
+            {
+                var stat = await MinioClient.StatObjectAsync(new StatObjectArgs()
+                    .WithBucket(MinioConfiguration.BucketName)
+                    .WithObject(dbImage.FileName));
+            });
+
+            var beforeCount = await Db.Estimates.CountAsync();
 
 			var estimateResponse = await Client.PostAsJsonAsync(
 				string.Format(EstimateUrl, nextImage.ImageId),
@@ -215,11 +231,6 @@ public class ApiTests: TestBase
 			Assert.NotNull(estimate);
 			Assert.AreEqual(estimateValue, estimate!.Score);
 			Assert.AreEqual(nextImage.ImageId, estimate.FileId);
-		
-			var imageFile = estimate.File.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0];
-			var scoreFileName = string.Join(".", imageFile, "txt");
-		
-			Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", scoreFileName)));
 			
 			
 			previousId = nextImage.ImageId!.Value;

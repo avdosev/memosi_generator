@@ -37,9 +37,6 @@ namespace MemesApi.Controllers
             var image = await _context.Files.FirstOrDefaultAsync(f => f.Id == imageId);
             if(image is null) return NotFound();
 
-            var imageFile = image.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries)[0];
-            var scoreFileName = string.Join(".", imageFile, "txt");
-
             await _context.Estimates.AddAsync(new Estimate
             {
                 FileId = imageId,

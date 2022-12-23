@@ -1,6 +1,7 @@
 ﻿using MemesApi.Db;
 using MemesApi.Db.Models;
 using MemesApi.Minio;
+using Microsoft.EntityFrameworkCore;
 
 namespace MemesApi.Starter
 {
@@ -26,6 +27,7 @@ namespace MemesApi.Starter
             await minioService.InitializeAsync()
                 ;
 
+            var filesCount = await memeContext.Files.CountAsync();
             if (!memeContext.Files.Any())
             {
                 var directoryPath = Path.Combine(Environment.CurrentDirectory, "static");
@@ -43,13 +45,8 @@ namespace MemesApi.Starter
                     await minioService.UploadAsync(file.FilePath, file.FileName);
                 }
 
-                var contextFiles = files.Select(f => new MemeFile()
-                {
-                    FileName = f.FileName
-                }
-                );
 
-                var (memeFiles, metas) = files
+                var memeFiles = files
                     .Select(f =>
                     {
                         FileSystemInfo info = new FileInfo(f.FilePath);
@@ -65,21 +62,13 @@ namespace MemesApi.Starter
                             Meta = meta,
                         };
 
-                        return (file, meta);
-                    })
-                    .Aggregate((new List<MemeFile>(), new List<FileMeta>()), (unpacked, record) =>
-                    {
-                        unpacked.Item1.Add(record.file);
-                        unpacked.Item2.Add(record.meta);
-                        return unpacked;
-                    });
+                        return file;
+                    }).ToList();
 
-                await memeContext.Metas.AddRangeAsync(metas);
+                    
+
                 await memeContext.Files.AddRangeAsync(memeFiles);
                 await memeContext.SaveChangesAsync();
-
-
-                await memeContext.Files.AddRangeAsync(contextFiles, cancellationToken);
                 await memeContext.SaveChangesAsync(cancellationToken);
             }
         }

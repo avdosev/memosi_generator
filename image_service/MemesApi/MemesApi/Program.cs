@@ -67,10 +67,10 @@ namespace MemesApi
 
             builder.Services.AddMinioClient(conf =>
             {
-                conf.Endpoint = builder.Configuration.GetValue<string>("MINIO_URL");
-                conf.AccessKey = builder.Configuration.GetValue<string>("MINIO_ACCESS_KEY");
-                conf.SecretKey = builder.Configuration.GetValue<string>("MINIO_SECRET_KEY");
-                conf.BucketName = builder.Configuration.GetValue<string>("MINIO_BUCKET");
+                conf.Endpoint = builder.Configuration.GetValue<string>(ConfigurationConsts.Minio.Url);
+                conf.AccessKey = builder.Configuration.GetValue<string>(ConfigurationConsts.Minio.AccessKey);
+                conf.SecretKey = builder.Configuration.GetValue<string>(ConfigurationConsts.Minio.SecretKey);
+                conf.BucketName = builder.Configuration.GetValue<string>(ConfigurationConsts.Minio.Bucket);
             });
 
             builder.Services.Configure<AppSettings>(config =>
