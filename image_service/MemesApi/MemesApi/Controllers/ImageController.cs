@@ -18,11 +18,17 @@ namespace MemesApi.Controllers
         private readonly MemeContext _context;
         private readonly IOptions<MinioConfiguration> _config;
         private readonly IModelService _modelService;
-        public ImagesController(MemeContext context, IOptions<MinioConfiguration> config, IModelService modelService)
+        private readonly IMinioService _minioService;
+        public ImagesController(
+            MemeContext context, 
+            IOptions<MinioConfiguration> config, 
+            IModelService modelService, 
+            IMinioService minioService)
         {
             _context = context;
             _config = config;
             _modelService = modelService;
+            _minioService = minioService;
         }
 
         [HttpPost("estimate/{imageId:int}")]
@@ -88,16 +94,10 @@ namespace MemesApi.Controllers
 
             var format = imageFile.ContentType.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
             var fileName = $"{Guid.NewGuid()}.{format}";
-            var filePath = $"./static/{fileName}";
             
-            DateTime creationDate;
-            using (var stream = System.IO.File.Create(filePath))
-            {
-                await modelStream.CopyToAsync(stream);
-                creationDate = DateTime.Now;
-            }
-            
-            var fileMeta = new FileMeta { Format = format, CreationDate = creationDate };
+            await _minioService.UploadAsync(modelStream, fileName);
+
+            var fileMeta = new FileMeta { Format = format, CreationDate = DateTime.Now };
             await _context.Metas.AddAsync(fileMeta);
             
             var memeFile = new MemeFile { FileName = fileName, Meta = fileMeta };
