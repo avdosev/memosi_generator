@@ -31,7 +31,7 @@ namespace MemesApi.Starter
                 var directoryPath = Path.Combine(Environment.CurrentDirectory, "static");
 
                 var files = Directory.EnumerateFiles(directoryPath)
-                    .Where(f => !f.Contains(GitKeepFile))
+                    .Where(f => !f.Contains(GitKeepFile) && !f.Contains(".txt"))
                     .Select(f => new
                     {
                         FileName = f.Split(Path.DirectorySeparatorChar).Last(),

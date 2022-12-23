@@ -159,3 +159,5 @@ dmypy.json
 .idea/
 
 monitoring/prometheus/*.Identifier
+**log**.txt
+**.octet-stream

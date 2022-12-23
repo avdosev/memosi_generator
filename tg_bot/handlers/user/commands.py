@@ -1,6 +1,7 @@
 from aiogram import types
 from keyboards.inline import Emoji
 from api import *
+import io
 
 async def bot_help(msg: types.Message):
     text = [
@@ -24,6 +25,13 @@ async def cmd_next(message: types.Message):
     print(resp)
     await message.answer_photo(await api.get_image(resp['url']), reply_markup=Emoji.emojiRating(imageId=resp['imageId']))
 
+
+async def image_sended(message: types.Message):
+    with io.BytesIO() as f:
+        await message.photo[-1].download(destination=f)
+        resp = await api.upload_image(f)
+    print(resp)
+    await message.answer_photo(await api.get_image(resp['url']), reply_markup=Emoji.emojiRating(imageId=resp['imageId']))
 
 def user_id_from(message: types.Message):
     return str(message.from_user.id)

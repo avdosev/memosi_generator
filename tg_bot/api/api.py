@@ -25,3 +25,10 @@ async def get_image(path):
     async with aiohttp.ClientSession() as session:
         async with session.get(path) as resp:
             return await resp.read()
+
+async def upload_image(pht):
+    data = aiohttp.FormData()
+    data.add_field('imageFile', pht)
+    async with aiohttp.ClientSession() as session:
+        async with session.post(_api('api/images/upload'), data=data) as resp:
+            return await resp.json()
