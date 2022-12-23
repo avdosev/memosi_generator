@@ -4,10 +4,8 @@ using MemesApi.Services;
 using MemesApi.Minio;
 using MemesApi.Starter;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Prometheus;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
 
 namespace MemesApi
@@ -32,7 +30,7 @@ namespace MemesApi
 
         private static void ConfigureLogging(WebApplicationBuilder builder)
         {
-            builder.Host.UseSerilog((context, services, configuration) =>
+            builder.Host.UseSerilog((_, _, configuration) =>
             {
                 configuration
                     .WriteTo.Console(LogEventLevel.Information, outputTemplate: ConfigurationConsts.OutputTemplate)
@@ -77,7 +75,6 @@ namespace MemesApi
 
             builder.Services.Configure<AppSettings>(config =>
             {
-                config.UrlPrefix = builder.Configuration.GetValue<string>(ConfigurationConsts.ApiUrl) + "/static";
                 config.MaxImageSize = 10 * 1024 * 1024; // 10 МБ
                 config.ModelServiceUrl = builder.Configuration.GetValue<string>(ConfigurationConsts.ModelUrl);
             });
