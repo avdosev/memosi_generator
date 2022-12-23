@@ -98,7 +98,7 @@ public class ApiTests: TestBase
 			
 			Assert.AreNotEqual(previousId, nextImage.ImageId);
 
-			var imageContent = await Client.GetAsync(nextImage.Url);
+			var imageContent = await DefaultClient.GetAsync(nextImage.Url);
 			Assert.True(imageContent.IsSuccessStatusCode);
 
 			var dbImage = await Db.Files.FindAsync(nextImage.ImageId);
@@ -197,7 +197,7 @@ public class ApiTests: TestBase
 			
 			Assert.AreNotEqual(previousId, nextImage.ImageId);
 
-			var imageContent = await Client.GetAsync(nextImage.Url);
+			var imageContent = await DefaultClient.GetAsync(nextImage.Url);
 			Assert.True(imageContent.IsSuccessStatusCode);
 
 			var dbImage = await Db.Files.FindAsync(nextImage.ImageId);
@@ -319,7 +319,7 @@ public class ApiTests: TestBase
 		                                                      $"Content: {content}");
 
 		var imageResponse = await response.Content.ReadFromJsonAsync<ImageResponse>();
-		response = await Client.GetAsync(imageResponse.Url);
+		response = await DefaultClient.GetAsync(imageResponse.Url);
 		Assert.True(response.StatusCode == HttpStatusCode.OK, "Invalid response. " +
 		                                                      $"Expected {HttpStatusCode.OK}. " +
 		                                                      $"Got {response.StatusCode}. ");

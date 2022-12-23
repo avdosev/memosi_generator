@@ -25,11 +25,10 @@ namespace MemesApi.Minio
 
 			var exists = await _minioClient.BucketExistsAsync(checkBucketArgs)
 				.ConfigureAwait(false);
-			if (!exists)
+
+			if(!exists)
 			{
-				var createArgs = new MakeBucketArgs()
-					.WithBucket(_configuration.BucketName);
-				await _minioClient.MakeBucketAsync(createArgs).ConfigureAwait(false);
+				throw new ApplicationException("Minio bucket is not configured!");
 			}
 		}
 		
@@ -50,7 +49,8 @@ namespace MemesApi.Minio
 			var uploadArgs = new PutObjectArgs()
 				.WithBucket(_configuration.BucketName)
 				.WithObject(name)
-				.WithStreamData(stream);
+				.WithStreamData(stream)
+				.WithObjectSize(stream.Length);
 
 			await _minioClient.PutObjectAsync(uploadArgs).ConfigureAwait(false);
 		}

@@ -15,12 +15,14 @@ namespace IntegrationTests
 {
 	public class TestBase
 	{
-		private const string ApiUrl = "http://127.0.0.1:9999/";
+		protected const string ApiUrl = "http://127.0.0.1:9999";
 
 		private WebApplicationFactory<Program> _application = null!;
 		private MemeContext _db = null!;
 		private HttpClient _client = null!;
-		private MinioClient _minioClient = null!;
+		private HttpClient _defaultClient = new HttpClient();
+
+        private MinioClient _minioClient = null!;
 		private MinioConfiguration _minioConfiguration = null!;
 
 
@@ -28,6 +30,7 @@ namespace IntegrationTests
 		protected HttpClient Client => _client;
 		protected MinioClient MinioClient => _minioClient;
 		protected MinioConfiguration MinioConfiguration => _minioConfiguration;
+		protected HttpClient DefaultClient => _defaultClient;
 		
 		protected void Setup(Dictionary<string, string> conf)
 		{
