@@ -20,9 +20,8 @@ using NUnit.Framework;
 
 namespace IntegrationTests;
 
-public class ApiTests
+public class ApiTests: TestBase
 {
-	private const string ApiUrl = "http://127.0.0.1:9999/";
 
 	private const string MetricsUrl = "metrics";
 	private const string EstimateUrl = "api/images/estimate/{0}";
@@ -36,39 +35,18 @@ public class ApiTests
 	};
 	
 	private readonly Random _random = new();
+	
 
-	private WebApplicationFactory<Program> _application = null!;
-	private MemeContext _db = null!;
-	private HttpClient _client = null!;
-
-
-	[SetUp]
+	[OneTimeSetUp]
 	public void SetupApplication()
 	{
-		_application = new WebApplicationFactory<Program>()
-			
-			.WithWebHostBuilder(builder =>
-			{
-				builder.ConfigureServices(services =>
-				{
-					var sp = services.BuildServiceProvider();
-					using var scope = sp.CreateScope();
-					var db = scope.ServiceProvider.GetService<MemeContext>()!;
-					db.Database.EnsureDeleted();
-					
-				});
-				
-				builder.ConfigureAppConfiguration((context, configurationBuilder) =>
-				{
-					configurationBuilder.AddInMemoryCollection(TestConfiguration);
-				});
-				
-			});
+		base.Setup(TestConfiguration);
+	}
 
-		var scope = _application.Services.CreateScope();
-		_db = scope.ServiceProvider.GetService<MemeContext>()!;
-		_client = _application.CreateClient();
-		_client.BaseAddress = new Uri(ApiUrl);
+	[OneTimeTearDown]
+	public void TearDownApp()
+	{
+		base.TearDown();
 	}
 
 
@@ -81,7 +59,7 @@ public class ApiTests
 			.Select(path => path.Split(Path.DirectorySeparatorChar).Last())
 			.ToList();
 		
-		var dbFiles = await _db.Files.ToListAsync();
+		var dbFiles = await Db.Files.ToListAsync();
 		
 		Assert.AreEqual(files.Count, dbFiles.Count);
 		foreach (var file in files)
@@ -97,7 +75,7 @@ public class ApiTests
 		var previousId = 0;
 		while (true)
 		{
-			var nextImageResponse = await _client.GetAsync(string.Format(GetNextUrl, userId, previousId));
+			var nextImageResponse = await Client.GetAsync(string.Format(GetNextUrl, userId, previousId));
 			Assert.True(nextImageResponse.IsSuccessStatusCode);
 			
 			var nextImage = await nextImageResponse.Content.ReadFromJsonAsync<ImageResponse>();
@@ -111,10 +89,10 @@ public class ApiTests
 			
 			Assert.AreNotEqual(previousId, nextImage.ImageId);
 
-			var imageContent = await _client.GetAsync(nextImage.Url);
+			var imageContent = await Client.GetAsync(nextImage.Url);
 			Assert.True(imageContent.IsSuccessStatusCode);
 
-			var dbImage = await _db.Files.FindAsync(nextImage.ImageId);
+			var dbImage = await Db.Files.FindAsync(nextImage.ImageId);
 		
 			Assert.NotNull(dbImage);
 			Assert.True(nextImage.Url!.Contains(dbImage!.FileName));
@@ -132,26 +110,26 @@ public class ApiTests
 		var userId = Guid.NewGuid().ToString();
 		var estimateValue = 2;
 		
-		var nextImageResponse = await _client.GetAsync(string.Format(GetNextUrl, userId, 0));
+		var nextImageResponse = await Client.GetAsync(string.Format(GetNextUrl, userId, 0));
 		Assert.True(nextImageResponse.IsSuccessStatusCode);
 		
 		var nextImage = await nextImageResponse.Content.ReadFromJsonAsync<ImageResponse>();
 		Assert.NotNull(nextImage);
 		Assert.False(nextImage!.Finished);
 
-		var beforeCount = await _db.Estimates.CountAsync();
+		var beforeCount = await Db.Estimates.CountAsync();
 
-		var estimateRequest = await _client.PostAsJsonAsync(
+		var estimateRequest = await Client.PostAsJsonAsync(
 			string.Format(EstimateUrl, nextImage.ImageId),
 			new EstimateRequest(estimateValue, userId));
 		
 		Assert.True(estimateRequest.IsSuccessStatusCode);
 
-		var afterCount = await _db.Estimates.CountAsync();
+		var afterCount = await Db.Estimates.CountAsync();
 		
 		Assert.AreEqual(beforeCount + 1, afterCount);
 
-		var estimate = await _db.Estimates
+		var estimate = await Db.Estimates
 			.Include(e => e.File)
 			.FirstOrDefaultAsync(e => e.ClientId == userId);
 		
@@ -171,7 +149,7 @@ public class ApiTests
 		var request = new EstimateRequest(10, Guid.NewGuid().ToString());
 		var randomImageId = _random.Next(1000000, 5000000);
 
-		var response = await _client.PostAsJsonAsync(string.Format(EstimateUrl, randomImageId), request);
+		var response = await Client.PostAsJsonAsync(string.Format(EstimateUrl, randomImageId), request);
 
 		Assert.False(response.IsSuccessStatusCode);
 		Assert.AreEqual(response.StatusCode, HttpStatusCode.NotFound);
@@ -181,7 +159,7 @@ public class ApiTests
 	[Test]
 	public async Task GetNextImage_EmptyClient_Negative_Test()
 	{
-		var response = await _client.GetAsync(GetNextUrl);
+		var response = await Client.GetAsync(GetNextUrl);
 		Assert.False(response.IsSuccessStatusCode);
 		Assert.AreEqual(response.StatusCode, HttpStatusCode.BadRequest);
 	}
@@ -194,7 +172,7 @@ public class ApiTests
 		var estimateValue = 2;
 		while (true)
 		{
-			var nextImageResponse = await _client.GetAsync(string.Format(GetNextUrl, userId, ""));
+			var nextImageResponse = await Client.GetAsync(string.Format(GetNextUrl, userId, ""));
 			Assert.True(nextImageResponse.IsSuccessStatusCode);
 			
 			var nextImage = await nextImageResponse.Content.ReadFromJsonAsync<ImageResponse>();
@@ -207,10 +185,10 @@ public class ApiTests
 			
 			Assert.AreNotEqual(previousId, nextImage.ImageId);
 
-			var imageContent = await _client.GetAsync(nextImage.Url);
+			var imageContent = await Client.GetAsync(nextImage.Url);
 			Assert.True(imageContent.IsSuccessStatusCode);
 
-			var dbImage = await _db.Files.FindAsync(nextImage.ImageId);
+			var dbImage = await Db.Files.FindAsync(nextImage.ImageId);
 		
 			Assert.NotNull(dbImage);
 			Assert.True(nextImage.Url!.Contains(dbImage!.FileName));
@@ -218,19 +196,19 @@ public class ApiTests
 			Assert.True(File.Exists(Path.Combine(Environment.CurrentDirectory, "static", dbImage.FileName)));
 
 			
-			var beforeCount = await _db.Estimates.CountAsync();
+			var beforeCount = await Db.Estimates.CountAsync();
 
-			var estimateResponse = await _client.PostAsJsonAsync(
+			var estimateResponse = await Client.PostAsJsonAsync(
 				string.Format(EstimateUrl, nextImage.ImageId),
 				new EstimateRequest(estimateValue, userId));
 			
 			Assert.True(estimateResponse.IsSuccessStatusCode);
 			
-			var afterCount = await _db.Estimates.CountAsync();
+			var afterCount = await Db.Estimates.CountAsync();
 		
 			Assert.AreEqual(beforeCount + 1, afterCount);
 
-			var estimate = await _db.Estimates
+			var estimate = await Db.Estimates
 				.Include(e => e.File)
 				.FirstOrDefaultAsync(e => e.ClientId == userId && e.FileId == nextImage.ImageId);
 		
@@ -275,7 +253,7 @@ public class ApiTests
 			var multipart = new MultipartFormDataContent();
 			multipart.Add(streamContent, "imageFile", Path.GetFileName(file));
 
-			response = await _client.PostAsync(UploadImage, multipart);
+			response = await Client.PostAsync(UploadImage, multipart);
 		}
 		
 		var content = await response.Content.ReadAsStringAsync();
@@ -298,7 +276,7 @@ public class ApiTests
 			var multipart = new MultipartFormDataContent();
 			multipart.Add(streamContent, "imageFile", Path.GetFileName(file));
 
-			response = await _client.PostAsync(UploadImage, multipart);
+			response = await Client.PostAsync(UploadImage, multipart);
 		}
 		
 		var content = await response.Content.ReadAsStringAsync();
@@ -320,7 +298,7 @@ public class ApiTests
 			var multipart = new MultipartFormDataContent();
 			multipart.Add(streamContent, "imageFile", "test_image.jpg");
 
-			response = await _client.PostAsync(UploadImage, multipart);
+			response = await Client.PostAsync(UploadImage, multipart);
 		}
 		
 		var content = await response.Content.ReadAsStringAsync();
@@ -330,19 +308,19 @@ public class ApiTests
 		                                                      $"Content: {content}");
 
 		var imageResponse = await response.Content.ReadFromJsonAsync<ImageResponse>();
-		response = await _client.GetAsync(imageResponse!.Url);
+		response = await Client.GetAsync(imageResponse.Url);
 		Assert.True(response.StatusCode == HttpStatusCode.OK, "Invalid response. " +
 		                                                      $"Expected {HttpStatusCode.OK}. " +
 		                                                      $"Got {response.StatusCode}. ");
 
-		var memeFile = await _db.Files.FindAsync(imageResponse.ImageId);
+		var memeFile = await Db.Files.FindAsync(imageResponse.ImageId);
 		Assert.True(memeFile is not null, $"Can't find {imageResponse.ImageId} in db.");
 	}
 
 	[Test]
 	public async Task MetricsAvailable_Test()
 	{
-		var metricsResponse = await _client.GetAsync(MetricsUrl);
+		var metricsResponse = await Client.GetAsync(MetricsUrl);
 		Assert.True(metricsResponse.IsSuccessStatusCode);
 
 		var result = await metricsResponse.Content.ReadAsStringAsync();
